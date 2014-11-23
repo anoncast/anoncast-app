@@ -1,53 +1,47 @@
-angular.module('starter.controllers', ['mdo-angular-cryptography'])
+angular.module('starter.controllers', ['ionic', 'mdo-angular-cryptography'])
 
-.controller('AppCtrl', function($scope, $ionicModal, $timeout, $crypto) {
-  // Form data for the login modal
-  $scope.loginData = {};
+.factory('RSAKeyGen', function($q) {
+	var generateKeys = function() {
+		var deferred = $q.defer();
 
-  // Create the login modal that we will use later
-  $ionicModal.fromTemplateUrl('templates/login.html', {
-    scope: $scope
-  }).then(function(modal) {
-    $scope.modal = modal;
-  });
+		var keySize = 512;
 
-  // Triggered in the login modal to close it
-  $scope.closeLogin = function() {
-    $scope.modal.hide();
-  };
+		deferred.resolve(new JSEncrypt({default_key_size: keySize}));
 
-  // Open the login modal
-  $scope.login = function() {
-    $scope.modal.show();
-  };
+		return deferred.promise;
+	};
 
-  // Perform the login action when the user submits the login form
-  $scope.doLogin = function() {
-    console.log('Doing login', $scope.loginData);
-
-    // Simulate a login delay. Remove this and replace with your login
-    // code if using a login system
-    $timeout(function() {
-      $scope.closeLogin();
-    }, 1000);
-  };
+	return {
+		generateKeys: generateKeys
+	};
 })
 
-.controller('PlaylistsCtrl', function($scope, $crypto) {
-  //console.log($crypto.encrypt('some plain text data', '123'));
-
-  console.log($crypto.encrypt("123", "123"));
-  console.log($crypto.decrypt($crypto.encrypt("123", "123"), "123"));
-
-  $scope.playlists = [
-    { title: 'Reggae', id: 1 },
-    { title: 'Chill', id: 2 },
-    { title: 'Dubstep', id: 3 },
-    { title: 'Indie', id: 4 },
-    { title: 'Rap', id: 5 },
-    { title: 'Cowbell', id: 6 }
-  ];
+.controller('AppCtrl', function($scope, $state) {
+	$scope.login = function(){
+		$state.go('app.playlists');
+	};
 })
 
-.controller('PlaylistCtrl', function($scope, $stateParams) {
+.controller('FirstCtrl', function($scope, RSAKeyGen, $ionicLoading, $state) {
+	$scope.show = function() {
+		$ionicLoading.show({
+			template: 'Loading...'
+		});
+	};
+
+	$scope.hide = function(){
+		$ionicLoading.hide();
+	};
+
+	$scope.register = function() {
+		$scope.show();
+
+		RSAKeyGen.generateKeys().then(function(key) {
+			localStorage['privkey'] = key.getPrivateKey();
+			localStorage['pubkey'] = key.getPublicKey();
+			$scope.hide();
+
+			$state.go('login');
+		});
+	};
 });
