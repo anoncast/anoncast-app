@@ -1,6 +1,6 @@
-angular.module('starter.controllers', [])
+angular.module('starter.controllers', ['mdo-angular-cryptography'])
 
-.controller('AppCtrl', function($scope, $ionicModal, $timeout) {
+.controller('AppCtrl', function($scope, $ionicModal, $timeout, $crypto) {
   // Form data for the login modal
   $scope.loginData = {};
 
@@ -33,7 +33,12 @@ angular.module('starter.controllers', [])
   };
 })
 
-.controller('PlaylistsCtrl', function($scope) {
+.controller('PlaylistsCtrl', function($scope, $crypto) {
+  //console.log($crypto.encrypt('some plain text data', '123'));
+
+  console.log($crypto.encrypt("123", "123"));
+  console.log($crypto.decrypt($crypto.encrypt("123", "123"), "123"));
+
   $scope.playlists = [
     { title: 'Reggae', id: 1 },
     { title: 'Chill', id: 2 },
