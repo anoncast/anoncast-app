@@ -1,4 +1,4 @@
-angular.module('starter.controllers', ['ionic', 'mdo-angular-cryptography'])
+angular.module('starter.controllers', ['ionic', 'mdo-angular-cryptography', 'angular-md5'])
 
 .factory('RSAKeyGen', function($q) {
 	var generateKeys = function() {
@@ -16,13 +16,26 @@ angular.module('starter.controllers', ['ionic', 'mdo-angular-cryptography'])
 	};
 })
 
-.controller('AppCtrl', function($scope, $state) {
+.controller('AppCtrl', function($scope, $state, $crypto, md5) {
+	$scope.loginData = {};
+
 	$scope.login = function(){
-		$state.go('app.playlists');
+		if(md5.createHash($scope.loginData.key) == localStorage['hash']){
+			privkey = $crypto.decrypt(localStorage['privkey'], $scope.loginData.key);
+			pubkey = $crypto.decrypt(localStorage['pubkey'], $scope.loginData.key);
+
+			$state.go('app.playlists');
+		}
 	};
 })
 
-.controller('FirstCtrl', function($scope, RSAKeyGen, $ionicLoading, $state) {
+.controller('TestCtrl', function() {
+	console.log(privkey);
+})
+
+.controller('FirstCtrl', function($scope, RSAKeyGen, $ionicLoading, $state, $crypto, md5) {
+	$scope.loginData = {};
+
 	$scope.show = function() {
 		$ionicLoading.show({
 			template: 'Loading...'
@@ -37,8 +50,9 @@ angular.module('starter.controllers', ['ionic', 'mdo-angular-cryptography'])
 		$scope.show();
 
 		RSAKeyGen.generateKeys().then(function(key) {
-			localStorage['privkey'] = key.getPrivateKey();
-			localStorage['pubkey'] = key.getPublicKey();
+			localStorage['privkey'] = $crypto.encrypt(key.getPrivateKey(), $scope.loginData.key);
+			localStorage['pubkey'] = $crypto.encrypt(key.getPublicKey(), $scope.loginData.key);
+			localStorage['hash'] = md5.createHash($scope.loginData.key);
 			$scope.hide();
 
 			$state.go('login');
